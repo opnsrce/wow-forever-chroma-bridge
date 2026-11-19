@@ -1,0 +1,13 @@
+## Interface: 16001
+## Title: Chroma Bridge
+## Notes: Draws a tiny status strip in the bottom-left corner for chroma-bridge.ps1 to read and turn into Razer lighting.
+## Version: 0.1.0
+## Author: Levi Hackwith
+
+# Lines starting with "##" are metadata WoW reads; a single "#" is a comment.
+# "## Interface" is the game build this addon targets. If it doesn't match the running game,
+# WoW lists the addon as out of date. install.ps1 rewrites it to match each installed game
+# version, so the value above (WoW Forever 1.60.1) only matters for manual installs.
+# The remaining lines are the Lua files to load, in order.
+
+ChromaBridge.lua

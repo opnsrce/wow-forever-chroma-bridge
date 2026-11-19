@@ -1,0 +1,62 @@
+# Publishes a GitHub release whenever a version tag (for example v0.1.0) is pushed.
+#
+# It builds the same zip as build.sh, takes that version's section from CHANGELOG.md as the
+# release notes, and attaches the zip, so non-programmers can download a ready-to-use package
+# from the Releases page without building anything.
+#
+# To release: bump "## Version" in ChromaBridge.toc, update CHANGELOG.md, commit, then
+#   git tag v0.1.0 && git push origin v0.1.0
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write   # needed to create the release and upload the zip
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check that the tag matches the addon version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          toc="$(sed -n 's/^## Version:[[:space:]]*//p' wow-chroma/ChromaBridge/ChromaBridge.toc | head -n 1 | tr -d '\r[:space:]')"
+          if [ "$tag" != "$toc" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME doesn't match '## Version: $toc' in ChromaBridge.toc"
+            exit 1
+          fi
+          echo "VERSION=$toc" >> "$GITHUB_ENV"
+
+      - name: Build the zip
+        run: ./build.sh
+
+      - name: Write release notes from CHANGELOG.md
+        run: |
+          {
+            echo "**To install:** download **WoW-Chroma-Bridge-$VERSION.zip** below (not \"Source code\"),"
+            echo "extract it to a folder you'll keep, and double-click \`Install.bat\`."
+            echo "Full instructions: [user guide](https://github.com/$GITHUB_REPOSITORY/blob/$GITHUB_REF_NAME/wow-chroma/README.md)."
+            echo
+            # This version's section: from its "## x.y.z" heading up to the next "## " heading.
+            awk -v v="$VERSION" '
+              $0 ~ "^## " { if (found) exit; if (index($0, "## " v) == 1) { found = 1; next } }
+              found { print }
+            ' CHANGELOG.md
+          } > release-notes.md
+          if ! grep -q '[^[:space:]]' <(sed '1,4d' release-notes.md); then
+            echo "::error::No '## $VERSION' section found in CHANGELOG.md"
+            exit 1
+          fi
+          cat release-notes.md
+
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" "dist/WoW-Chroma-Bridge-$VERSION.zip" \
+            --title "WoW Chroma Bridge $VERSION" \
+            --notes-file release-notes.md

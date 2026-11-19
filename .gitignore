@@ -1,0 +1,9 @@
+# Build output from build.ps1 (publish zips as GitHub release assets instead)
+dist/
+
+# OS and editor clutter
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

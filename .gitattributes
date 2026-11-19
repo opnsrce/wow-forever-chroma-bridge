@@ -1,0 +1,16 @@
+# Normalize line endings in the repository.
+* text=auto
+
+# Windows scripts: always CRLF on checkout (cmd.exe can misparse batch files with LF endings).
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Unix scripts: always LF, or bash fails on the carriage returns.
+*.sh text eol=lf
+
+# WoW reads either; keep the addon files LF.
+*.lua text eol=lf
+*.toc text eol=lf
+
+*.zip binary
